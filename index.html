@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluent Wallet AI - 意图驱动的未来钱包</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.1/dist/ethers.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #020408; color: #e2e8f0; }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .ai-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        
+        .risk-glow-low { box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+        .risk-glow-medium { box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
+        .risk-glow-high { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        .typing-dot {
+            width: 4px; height: 4px; background: #60a5fa; border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        .active-nav { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left: 3px solid #3b82f6; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="h-14 border-b border-white/5 glass-panel flex items-center justify-between px-4 shrink-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 ai-gradient rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="hidden sm:block">
+                <h1 class="text-sm font-black tracking-tighter uppercase italic">Fluent Wallet AI</h1>
+                <p class="text-[10px] text-slate-500 font-medium">Intent-Driven Gateway</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <span class="text-[10px] font-bold text-slate-300" id="network-display">Ethereum Sepolia</span>
+            </div>
+            <button id="wallet-status" data-action="connect" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold transition-all shadow-lg shadow-blue-600/20">
+                连接钱包
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Left Sidebar: Assets & Info -->
+        <aside class="hidden lg:flex w-72 flex-col border-r border-white/5 glass-panel shrink-0">
+            <nav class="p-2 space-y-1">
+                <button data-tab="chat" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl active-nav transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    智能对话
+                </button>
+                <button data-tab="docs" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-slate-400 hover:bg-white/5 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    钱包管理
+                </button>
+            </nav>
+
+            <div id="sidebar-panel-chat" class="flex-1 flex flex-col overflow-hidden">
+                <div class="p-4 border-t border-white/5">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">资产概览</h3>
+                    <div id="asset-list" class="space-y-3">
+                        <div class="text-xs text-slate-500 italic text-center py-8">请先连接钱包</div>
+                    </div>
+                </div>
+                <div class="mt-auto p-4 border-t border-white/5 bg-blue-600/5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-blue-400 uppercase">安全状态</span>
+                        <span class="text-[10px] text-green-500 font-bold">实时保护中</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                            <div class="w-1 h-1 rounded-full bg-blue-500"></div> 意图深度解析已开启
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                            <div class="w-1 h-1 rounded-full bg-blue-500"></div> 安全加密已启用
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Management Panel -->
+            <div id="sidebar-panel-docs" class="hidden flex-1 overflow-y-auto p-4 space-y-4 hide-scroll text-xs leading-relaxed text-slate-300">
+                <div class="space-y-2">
+                    <h2 class="text-blue-400 font-bold text-sm">钱包信息</h2>
+                    <div id="wallet-info" class="bg-white/5 rounded-lg p-3 space-y-2">
+                        <div>
+                            <label class="text-slate-500 text-[10px]">地址</label>
+                            <div class="font-mono text-[11px] text-blue-400 break-all select-all" id="wallet-address">未连接</div>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px]">余额</label>
+                            <div class="font-mono text-[11px]" id="wallet-balance">0 ETH</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-blue-400 font-bold text-sm">快速操作</h2>
+                    <button id="btn-create-wallet" class="w-full px-3 py-2 bg-green-600/20 border border-green-500/30 rounded-lg text-xs font-bold text-green-400 hover:bg-green-600/30 transition-all">
+                        + 创建新钱包
+                    </button>
+                    <button id="btn-import-wallet" class="w-full px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg text-xs font-bold text-blue-400 hover:bg-blue-600/30 transition-all">
+                        📥 导入钱包
+                    </button>
+                    <button id="btn-export-key" class="w-full px-3 py-2 bg-yellow-600/20 border border-yellow-500/30 rounded-lg text-xs font-bold text-yellow-400 hover:bg-yellow-600/30 transition-all">
+                        🔑 导出私钥
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Interaction Area -->
+        <section class="flex-1 flex flex-col min-w-0 bg-[#020408] relative">
+            <!-- Chat Window -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 hide-scroll">
+                <!-- Welcome Message -->
+                <div class="flex items-start gap-3 max-w-2xl animate-fade-in">
+                    <div class="w-8 h-8 ai-gradient rounded-lg flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div class="glass-panel p-4 rounded-2xl rounded-tl-none border-blue-500/20 shadow-xl">
+                        <p class="text-sm leading-relaxed">
+                            你好！我是 <span class="text-blue-400 font-bold">Fluent Wallet AI</span>。
+                            <br><br>
+                            我是一款基于自然语言意图的 Web3 钱包，支持：
+                            <span class="block mt-2 text-xs text-slate-400 italic">🔑 创建和导入钱包</span>
+                            <span class="block text-xs text-slate-400 italic">💰 查询资产和余额</span>
+                            <span class="block text-xs text-slate-400 italic">💸 转账和交易</span>
+                            <span class="block text-xs text-slate-400 italic">🛡️ 安全检查和授权管理</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Panel -->
+            <div id="action-panel" class="absolute right-4 top-4 bottom-24 w-80 z-40 hidden animate-fade-in">
+                <div class="h-full glass-panel rounded-2xl border-blue-500/30 flex flex-col overflow-hidden shadow-2xl">
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between bg-blue-600/10">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase" id="panel-title">操作预览</h4>
+                        <button class="text-slate-500 hover:text-white" onclick="document.getElementById('action-panel').classList.add('hidden')">✕</button>
+                    </div>
+                    <div id="action-content" class="flex-1 overflow-y-auto p-4 space-y-4 hide-scroll">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="p-4 sm:p-6 glass-panel border-t border-white/5">
+                <div class="max-w-3xl mx-auto flex flex-col gap-3">
+                    <div id="suggestions" class="flex gap-2 overflow-x-auto hide-scroll">
+                        <button data-action="suggest" data-val="资产查询" class="whitespace-nowrap px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[11px] hover:border-blue-500/50 transition-all">💰 资产查询</button>
+                        <button data-action="suggest" data-val="创建钱包" class="whitespace-nowrap px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[11px] hover:border-blue-500/50 transition-all">🔑 创建钱包</button>
+                        <button data-action="suggest" data-val="余额查询" class="whitespace-nowrap px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[11px] hover:border-blue-500/50 transition-all">💸 余额查询</button>
+                        <button data-action="suggest" data-val="检查安全" class="whitespace-nowrap px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[11px] hover:border-blue-500/50 transition-all">🛡️ 安全检查</button>
+                    </div>
+                    <div class="relative group">
+                        <input id="user-input" type="text" placeholder="输入您的意图，例如：'帮我查询余额'..." class="w-full bg-[#0d1117] border border-white/10 rounded-2xl py-4 px-5 pr-14 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-2xl">
+                        <button id="send-btn" class="absolute right-2 top-2 bottom-2 w-10 ai-gradient rounded-xl flex items-center justify-center text-white shadow-lg active:scale-95 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-center text-slate-500">⚠️ 请妥善保管私钥，AI 无法恢复丢失的资产。所有交易需二次确认。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Templates -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div id="modal-content" class="glass-panel rounded-2xl p-6 max-w-md w-full mx-4 border-blue-500/30 space-y-4 max-h-[90vh] overflow-y-auto">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
+    <script src="wallet.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
